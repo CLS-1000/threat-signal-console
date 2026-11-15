@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threat Signal Console</title>
+<style>
+  :root {
+    --bg: #0a0e17; --panel: #0f1623; --panel-2: #131c2c; --line: #1e293b; --line-2: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --dim: #64748b;
+    --cyan: #22d3ee; --amber: #fbbf24; --red: #f87171; --green: #34d399; --slate: #64748b;
+    --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.5 var(--sans); }
+  button, input, textarea { font: inherit; color: inherit; }
+  .mono { font-family: var(--mono); }
+  header { position: sticky; top: 0; z-index: 5; background: rgba(15, 22, 35, .96); border-bottom: 1px solid var(--line); }
+  .bar { max-width: 1600px; margin: 0 auto; padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+  h1 { margin: 0; font-size: 16px; letter-spacing: .02em; }
+  .sub { color: var(--muted); font: 11px var(--mono); }
+  .counters { display: flex; gap: 8px; flex-wrap: wrap; font: 12px var(--mono); }
+  .counter { padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); display: flex; gap: 8px; align-items: center; }
+  .counter b { font-size: 14px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  main { max-width: 1600px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 1100px) { main { grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr); } }
+  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
+  h2 { margin: 0 0 10px; font: 600 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: #cbd5e1; display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+  h2 small { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--muted); }
+  .sliders { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .slider label { display: flex; justify-content: space-between; font: 600 12px var(--mono); margin-bottom: 6px; }
+  .slider .hint { color: var(--dim); font: 11px var(--mono); margin-top: 4px; }
+  input[type=range] { width: 100%; accent-color: var(--cyan); }
+  input[type=range].amber { accent-color: var(--amber); }
+  .val { padding: 0 6px; border: 1px solid var(--line-2); border-radius: 4px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .between { justify-content: space-between; }
+  .controls-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .btn { padding: 5px 10px; border: 1px solid var(--line-2); border-radius: 6px; background: var(--bg); cursor: pointer; font: 12px var(--mono); }
+  .btn:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn.on { background: rgba(34, 211, 238, .15); border-color: var(--cyan); color: var(--cyan); }
+  .btn.primary { border-color: var(--cyan); color: var(--cyan); }
+  .btn.threat { border-color: rgba(248, 113, 113, .6); color: var(--red); }
+  .btn.noise { border-color: var(--line-2); color: #cbd5e1; }
+  .btn.tier { border-color: rgba(251, 191, 36, .6); color: var(--amber); }
+  .field { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font: 12px var(--mono); width: 100%; }
+  .field:focus { outline: none; border-color: var(--cyan); }
+  .banner { margin-top: 10px; padding: 6px 10px; border: 1px solid rgba(251, 191, 36, .5); border-radius: 6px; color: var(--amber); font: 12px var(--mono); display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  #chart { position: relative; height: 420px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  #chart svg { display: block; width: 100%; height: 100%; }
+  #tip { position: absolute; pointer-events: none; display: none; max-width: 300px; background: var(--panel); border: 1px solid var(--cyan); border-radius: 8px; padding: 8px 10px; font: 11px var(--mono); z-index: 3; }
+  .legend { display: flex; gap: 12px; font: 11px var(--mono); color: var(--muted); flex-wrap: wrap; }
+  .scroll { overflow: auto; max-height: 340px; }
+  table { width: 100%; border-collapse: collapse; font: 12px var(--mono); }
+  th { text-align: left; color: var(--muted); font-weight: 400; text-transform: uppercase; font-size: 11px; padding: 8px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); white-space: nowrap; }
+  td { padding: 8px; border-bottom: 1px solid rgba(30, 41, 59, .6); vertical-align: top; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--panel-2); }
+  tbody tr.sel { background: rgba(34, 211, 238, .1); }
+  .title { font-family: var(--sans); color: var(--muted); max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tag { display: inline-block; padding: 1px 6px; border: 1px solid var(--line-2); border-radius: 4px; font: 11px var(--mono); white-space: nowrap; }
+  .tag.ESCALATED { color: var(--red); border-color: rgba(248, 113, 113, .5); background: rgba(248, 113, 113, .1); }
+  .tag.WATCHED { color: var(--amber); border-color: rgba(251, 191, 36, .5); background: rgba(251, 191, 36, .1); }
+  .tag.DROPPED { color: var(--muted); background: rgba(100, 116, 139, .15); }
+  .tag.cyan { color: var(--cyan); border-color: rgba(34, 211, 238, .4); }
+  .tag.green { color: var(--green); border-color: rgba(52, 211, 153, .4); }
+  .fail { color: var(--dim); }
+  .box { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-top: 10px; }
+  .box h3 { margin: 0 0 6px; font: 11px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .05em; }
+  .why { border-color: var(--line-2); font-size: 13px; }
+  .gate { margin-top: 10px; font: 12px var(--mono); }
+  .gate:first-of-type { margin-top: 0; }
+  .gate .head { display: flex; justify-content: space-between; gap: 8px; }
+  .meter { position: relative; height: 6px; background: #1e293b; border-radius: 3px; margin: 5px 0; }
+  .meter i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
+  .meter u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #fff; }
+  .gate p { margin: 0; color: var(--muted); font: 12px var(--sans); }
+  .obs { padding: 8px 0; border-top: 1px solid var(--line); }
+  .obs:first-of-type { border-top: 0; padding-top: 0; }
+  .obs a, .link { color: var(--cyan); word-break: break-all; }
+  .small { font: 11px var(--mono); color: var(--muted); }
+  details summary { cursor: pointer; color: var(--muted); font: 11px var(--mono); }
+  pre { margin: 6px 0 0; padding: 8px; background: #060910; border: 1px solid var(--line); border-radius: 6px; font: 11px var(--mono); white-space: pre-wrap; word-break: break-all; max-height: 260px; overflow: auto; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .cell { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 12px var(--mono); }
+  .cell b { display: block; font-size: 16px; }
+  .audit { max-height: 360px; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+  .event { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 11px var(--mono); cursor: pointer; }
+  .event:hover { border-color: var(--line-2); }
+  .empty { color: var(--muted); padding: 18px; text-align: center; }
+  #toast { position: fixed; right: 16px; bottom: 16px; background: var(--panel); border: 1px solid var(--cyan); border-radius: 8px; padding: 8px 14px; font: 12px var(--mono); display: none; z-index: 10; max-width: 420px; }
+  #toast.err { border-color: var(--red); color: var(--red); }
+  code { font-family: var(--mono); background: #060910; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div>
+      <h1>Threat Signal Console</h1>
+      <div class="sub" id="status-line">Loading…</div>
+    </div>
+    <div class="counters">
+      <div class="counter"><span class="dot" style="background:var(--red)"></span>Escalated <b id="n-escalated" style="color:var(--red)">0</b></div>
+      <div class="counter"><span class="dot" style="background:var(--amber)"></span>Watched <b id="n-watched" style="color:var(--amber)">0</b></div>
+      <div class="counter"><span class="dot" style="background:var(--slate)"></span>Dropped <b id="n-dropped">0</b></div>
+      <button class="btn" id="refresh">Refresh</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="col">
+
+    <section>
+      <div class="sliders">
+        <div class="slider">
+          <label for="s-vel"><span style="color:var(--cyan)">Gate 02 · velocity pass mark</span><span class="val mono" id="v-vel">0.65</span></label>
+          <input id="s-vel" type="range" min="0.10" max="0.95" step="0.01" value="0.65">
+          <div class="hint">Mentions in the last 24 hours against the 7 days before, as a z-score.</div>
+        </div>
+        <div class="slider">
+          <label for="s-cred"><span style="color:var(--amber)">Gate 03 · credibility pass mark</span><span class="val mono" id="v-cred">0.65</span></label>
+          <input id="s-cred" class="amber" type="range" min="0.10" max="0.95" step="0.01" value="0.65">
+          <div class="hint">Best source tier, plus a little for each corroborating source.</div>
+        </div>
+      </div>
+      <div class="banner" id="preview-banner" hidden>
+        <span>Preview only. These pass marks are not saved.</span>
+        <span class="row">
+          <button class="btn primary" id="save-thresholds">Save and re-triage</button>
+          <button class="btn" id="reset-thresholds">Back to saved</button>
+        </span>
+      </div>
+      <div class="row between controls-foot">
+        <div class="row" id="tiers">
+          <button class="btn on" data-tier="ALL">All tiers</button>
+          <button class="btn" data-tier="1">Tier 1</button>
+          <button class="btn" data-tier="2">Tier 2</button>
+          <button class="btn" data-tier="3">Tier 3</button>
+          <button class="btn" data-tier="4">Tier 4</button>
+        </div>
+        <div style="width:260px;max-width:100%"><input class="field" id="search" type="search" placeholder="Filter by CVE, title, source…"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>
+        <span>Credibility × velocity <small>bubble size = novelty; points that share a position are fanned out</small></span>
+        <span class="legend">
+          <span><span class="dot" style="background:var(--red)"></span> Escalated</span>
+          <span><span class="dot" style="background:var(--amber)"></span> Watched</span>
+          <span><span class="dot" style="background:var(--slate)"></span> Dropped</span>
+        </span>
+      </h2>
+      <div id="chart"><div id="tip"></div></div>
+    </section>
+
+    <section>
+      <h2><span>Signals</span><small id="showing"></small></h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Signal</th><th>Best tier</th><th>Sources</th><th>Vol</th><th>Vel</th><th>Cred</th><th>Nov</th><th>State and reason</th><th>Verdicts</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="empty" id="no-rows" hidden></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section>
+      <h2><span>Signal inspector</span><small class="mono" id="inspector-id"></small></h2>
+      <div id="inspector"><div class="empty">Select a signal.</div></div>
+    </section>
+
+    <section>
+      <h2><span>Calibration</span><small>triage measured against analyst verdicts</small></h2>
+      <div id="calibration"></div>
+    </section>
+
+    <section>
+      <h2><span>Audit log</span><small id="audit-head" class="mono"></small></h2>
+      <div class="audit" id="audit"></div>
+    </section>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------- helpers
+const $ = (id) => document.getElementById(id);
+const COLORS = { ESCALATED: "#ef4444", WATCHED: "#f59e0b", DROPPED: "#64748b" };
+const GATES = [
+  { key: "volume", name: "Gate 01 · Volume", color: "#94a3b8" },
+  { key: "velocity", name: "Gate 02 · Velocity", color: "#22d3ee" },
+  { key: "credibility", name: "Gate 03 · Credibility", color: "#fbbf24" },
+  { key: "novelty", name: "Gate 04 · Novelty", color: "#34d399" },
+];
+
+// Build DOM nodes. Text always goes in as text, never as markup.
+function h(tag, attrs, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs || {})) {
+    if (value === null || value === undefined || value === false) continue;
+    if (key === "class") node.className = value;
+    else if (key === "style") node.style.cssText = value;
+    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+    else node.setAttribute(key, value === true ? "" : value);
+  }
+  for (const child of children.flat()) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+  }
+  return node;
+}
+function svg(tag, attrs, text) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [key, value] of Object.entries(attrs || {})) node.setAttribute(key, value);
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+const f2 = (n) => (typeof n === "number" ? n.toFixed(2) : "–");
+const when = (iso) => (iso ? iso.replace("T", " ").replace(":00Z", "Z").replace("Z", " UTC") : "–");
+const safeUrl = (url) => (typeof url === "string" && /^https?:\/\//i.test(url) ? url : null);
+
+let toastTimer;
+function toast(message, isError) {
+  const el = $("toast");
+  el.textContent = message;
+  el.className = isError ? "err" : "";
+  el.style.display = "block";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.style.display = "none"; }, isError ? 6000 : 2800);
+}
+
+async function api(path, options) {
+  const response = await fetch(path, options);
+  let body = null;
+  try { body = await response.json(); } catch (error) { /* no body */ }
+  if (!response.ok) {
+    const detail = body && body.detail;
+    const message = typeof detail === "string" ? detail : detail ? JSON.stringify(detail) : response.statusText;
+    throw new Error(message || ("HTTP " + response.status));
+  }
+  return body;
+}
+
+// ------------------------------------------------------------------ state
+const state = {
+  saved: null,        // thresholds stored on the server
+  vel: 0.65, cred: 0.65,
+  tier: "ALL", query: "",
+  selected: null,
+  data: null,         // /api/v1/signals response
+  detail: null,       // /api/v1/signals/{id} response for the selected signal
+  status: null,
+};
+const isPreview = () => state.saved && (state.vel !== state.saved.velocity || state.cred !== state.saved.credibility);
+
+function analystName() {
+  try { return localStorage.getItem("tsc.analyst") || ""; } catch (error) { return ""; }
+}
+function rememberAnalyst(name) {
+  try { localStorage.setItem("tsc.analyst", name); } catch (error) { /* storage unavailable */ }
+}
+
+function visibleSignals() {
+  if (!state.data) return [];
+  const query = state.query.trim().toLowerCase();
+  return state.data.signals.filter((signal) => {
+    if (state.tier !== "ALL" && String(signal.best_tier) !== state.tier) return false;
+    if (!query) return true;
+    const haystack = [signal.label, signal.title, signal.subject_key, ...signal.sources.map((source) => source.name)].join(" ").toLowerCase();
+    return haystack.includes(query);
+  });
+}
+const selectedSignal = () => (state.data ? state.data.signals.find((signal) => signal.signal_id === state.selected) || null : null);
+
+// ---------------------------------------------------------------- loading
+async function loadSignals() {
+  const params = isPreview() ? "?velocity=" + state.vel + "&credibility=" + state.cred : "";
+  state.data = await api("/api/v1/signals" + params);
+  if (!state.saved) {
+    state.saved = state.data.saved_thresholds;
+    state.vel = state.saved.velocity;
+    state.cred = state.saved.credibility;
+  }
+  const visible = visibleSignals();
+  if (!visible.some((signal) => signal.signal_id === state.selected)) {
+    state.selected = visible.length ? visible[0].signal_id : null;
+    state.detail = null;
+  }
+  render();
+  if (state.selected && (!state.detail || state.detail.signal_id !== state.selected)) await loadDetail();
+}
+async function loadDetail() {
+  if (!state.selected) { state.detail = null; renderInspector(); return; }
+  const wanted = state.selected;
+  const detail = await api("/api/v1/signals/" + encodeURIComponent(wanted));
+  if (wanted !== state.selected) return;  // selection moved on while this was loading
+  state.detail = detail;
+  renderInspector();
+}
+async function loadSide() {
+  const [status, audit, calibration] = await Promise.all([
+    api("/api/v1/status"), api("/api/v1/audit?limit=40"), api("/api/v1/calibration"),
+  ]);
+  state.status = status;
+  renderStatus();
+  renderAudit(audit);
+  renderCalibration(calibration);
+}
+async function reloadAll() {
+  try {
+    state.saved = null;
+    state.detail = null;
+    await loadSignals();
+    await loadSide();
+  } catch (error) { toast("Could not load: " + error.message, true); }
+}
+
+// -------------------------------------------------------------- rendering
+function render() {
+  $("s-vel").value = state.vel; $("s-cred").value = state.cred;
+  $("v-vel").textContent = f2(state.vel); $("v-cred").textContent = f2(state.cred);
+  $("preview-banner").hidden = !isPreview();
+  const visible = visibleSignals();
+  const counts = { ESCALATED: 0, WATCHED: 0, DROPPED: 0 };
+  for (const signal of visible) if (signal.state in counts) counts[signal.state] += 1;
+  $("n-escalated").textContent = counts.ESCALATED;
+  $("n-watched").textContent = counts.WATCHED;
+  $("n-dropped").textContent = counts.DROPPED;
+  const total = state.data ? state.data.signals.length : 0;
+  $("showing").textContent = "Showing " + visible.length + " of " + total + (isPreview() ? " · preview" : "");
+  renderChart(visible);
+  renderTable(visible, total);
+  renderInspector();
+}
+
+function renderStatus() {
+  const status = state.status;
+  if (!status) return;
+  const last = status.last_ingest;
+  const parts = [status.signals + " signals from " + status.observations + " observations", status.verdicts + " verdicts"];
+  parts.push(last ? "last ingest " + when(last.at) + " (" + last.source_id + (last.error ? ", failed" : "") + ")" : "nothing ingested yet");
+  $("status-line").textContent = parts.join(" · ");
+  $("audit-head").textContent = status.audit_events
+    ? status.audit_events + " events · head " + status.audit_head_hash.slice(0, 12) + "…" : "empty";
+}
+
+function select(signalId) {
+  if (state.selected === signalId) return;
+  state.selected = signalId;
+  state.detail = null;
+  render();
+  loadDetail().catch((error) => toast("Could not load signal: " + error.message, true));
+}
+
+function renderChart(signals) {
+  const box = $("chart");
+  const tip = $("tip");
+  const old = box.querySelector("svg");
+  if (old) old.remove();
+  const width = box.clientWidth || 700, height = box.clientHeight || 420;
+  const m = { top: 26, right: 22, bottom: 44, left: 52 };
+  const w = width - m.left - m.right, hgt = height - m.top - m.bottom;
+  const TOP = 1.08;  // headroom so points scored 1.0 are not clipped
+  const x = (v) => m.left + (v / TOP) * w;
+  const y = (v) => m.top + hgt - (v / TOP) * hgt;
+  const root = svg("svg", { viewBox: "0 0 " + width + " " + height, role: "img", "aria-label": "Signals by credibility and velocity" });
+  const mono = { "font-family": "ui-monospace, Menlo, Consolas, monospace", "font-size": "10" };
+
+  const th = state.data ? state.data.thresholds : { velocity: state.vel, credibility: state.cred, provenance_floor: 0.4 };
+  const cx = x(th.credibility), cy = y(th.velocity), fx = x(th.provenance_floor);
+
+  // Escalation zone and the region the provenance floor rules out.
+  root.append(svg("rect", { x: m.left, y: m.top, width: Math.max(0, fx - m.left), height: hgt, fill: "rgba(100,116,139,0.08)" }));
+  root.append(svg("rect", { x: cx, y: m.top, width: Math.max(0, m.left + w - cx), height: Math.max(0, cy - m.top), fill: "rgba(239,68,68,0.09)", stroke: "rgba(239,68,68,0.3)", "stroke-dasharray": "3,3" }));
+
+  for (let tick = 0; tick <= 10; tick += 2) {
+    const v = tick / 10;
+    root.append(svg("line", { x1: x(v), x2: x(v), y1: m.top, y2: m.top + hgt, stroke: "rgba(30,41,59,0.6)" }));
+    root.append(svg("line", { x1: m.left, x2: m.left + w, y1: y(v), y2: y(v), stroke: "rgba(30,41,59,0.6)" }));
+    root.append(svg("text", { x: x(v), y: m.top + hgt + 14, fill: "#94a3b8", "text-anchor": "middle", ...mono }, v.toFixed(1)));
+    root.append(svg("text", { x: m.left - 8, y: y(v) + 3, fill: "#94a3b8", "text-anchor": "end", ...mono }, v.toFixed(1)));
+  }
+  root.append(svg("text", { x: m.left + w / 2, y: height - 8, fill: "#cbd5e1", "text-anchor": "middle", ...mono, "font-size": "11" }, "Gate 03 · credibility"));
+  root.append(svg("text", { x: 14, y: m.top + hgt / 2, fill: "#cbd5e1", "text-anchor": "middle", transform: "rotate(-90 14 " + (m.top + hgt / 2) + ")", ...mono, "font-size": "11" }, "Gate 02 · velocity"));
+
+  root.append(svg("line", { x1: fx, x2: fx, y1: m.top, y2: m.top + hgt, stroke: "#64748b", "stroke-dasharray": "2,4" }));
+  root.append(svg("text", { x: fx - 4, y: m.top + hgt - 6, fill: "#64748b", "text-anchor": "end", ...mono }, "provenance floor " + f2(th.provenance_floor)));
+  root.append(svg("line", { x1: cx, x2: cx, y1: m.top, y2: m.top + hgt, stroke: "#f59e0b", "stroke-width": 1.5, "stroke-dasharray": "5,4" }));
+  root.append(svg("text", { x: cx + 4, y: m.top + hgt - 6, fill: "#fbbf24", ...mono }, "credibility " + f2(th.credibility)));
+  root.append(svg("line", { x1: m.left, x2: m.left + w, y1: cy, y2: cy, stroke: "#06b6d4", "stroke-width": 1.5, "stroke-dasharray": "5,4" }));
+  root.append(svg("text", { x: m.left + 6, y: cy < m.top + 16 ? cy + 12 : cy - 5, fill: "#22d3ee", ...mono }, "velocity " + f2(th.velocity)));
+  root.append(svg("text", { x: m.left + w - 6, y: m.top + 12, fill: "#f87171", "text-anchor": "end", ...mono, "font-weight": "700" }, "ESCALATED: credible and spiking"));
+
+  // Fan out signals that share exactly the same scores, so none hides another.
+  const stacks = new Map();
+  const placed = signals.filter((signal) => signal.scores).map((signal) => {
+    const key = signal.scores.credibility + "|" + signal.scores.velocity;
+    const index = stacks.get(key) || 0;
+    stacks.set(key, index + 1);
+    const radius = 5 + 9 * Math.sqrt(Math.max(0, signal.scores.novelty));
+    const spread = index === 0 ? 0 : 9 * Math.sqrt(index), angle = index * 2.399963;
+    return { signal, radius, index, px: x(signal.scores.credibility) + spread * Math.cos(angle), py: y(signal.scores.velocity) + spread * Math.sin(angle) };
+  });
+  placed.sort((a, b) => b.radius - a.radius);
+  const showLabels = placed.length <= 16;
+  for (const point of placed) {
+    const signal = point.signal, chosen = signal.signal_id === state.selected;
+    const group = svg("g", { transform: "translate(" + point.px.toFixed(1) + "," + point.py.toFixed(1) + ")", style: "cursor:pointer" });
+    if (chosen) group.append(svg("circle", { r: point.radius + 5, fill: "none", stroke: "#22d3ee", "stroke-width": 2, "stroke-dasharray": "3,2" }));
+    group.append(svg("circle", { r: point.radius, fill: COLORS[signal.state] || "#64748b", "fill-opacity": 0.8, stroke: chosen ? "#fff" : "#0a0e17", "stroke-width": chosen ? 2 : 1.2 }));
+    if ((showLabels && point.index === 0) || chosen) group.append(svg("text", { x: point.radius + 4, y: 3, fill: chosen ? "#fff" : "#cbd5e1", ...mono, "font-weight": chosen ? "700" : "400" }, signal.label.length > 22 ? signal.title.slice(0, 22) + "…" : signal.label));
+    group.addEventListener("click", () => select(signal.signal_id));
+    group.addEventListener("mousemove", (event) => {
+      tip.replaceChildren(
+        h("div", { style: "font-weight:700;color:#fff" }, signal.label),
+        h("div", { style: "color:#cbd5e1;margin-bottom:4px" }, signal.title),
+        h("div", {}, "credibility " + f2(signal.scores.credibility) + " · velocity " + f2(signal.scores.velocity) + " · novelty " + f2(signal.scores.novelty)),
+        h("div", { style: "margin-top:4px;color:" + (COLORS[signal.state] || "#94a3b8") }, signal.state + " · " + signal.reason),
+      );
+      const bounds = box.getBoundingClientRect();
+      const left = event.clientX - bounds.left, top = event.clientY - bounds.top;
+      tip.style.display = "block";
+      tip.style.left = (left + 310 > width ? Math.max(4, left - 310) : left + 14) + "px";
+      tip.style.top = Math.max(4, Math.min(height - 90, top - 20)) + "px";
+    });
+    group.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+    root.append(group);
+  }
+  if (!placed.length) root.append(svg("text", { x: m.left + w / 2, y: m.top + hgt / 2, fill: "#64748b", "text-anchor": "middle", ...mono, "font-size": "12" }, "No signals to plot"));
+  box.append(root);
+}
+
+function renderTable(signals, total) {
+  const body = $("rows");
+  body.replaceChildren();
+  const empty = $("no-rows");
+  empty.hidden = signals.length > 0;
+  if (!signals.length) {
+    empty.replaceChildren(total
+      ? "No signal matches the filter."
+      : h("span", {}, "Nothing ingested yet. Run ", h("code", {}, "threat-signal-console ingest"), " and press Refresh."));
+    return;
+  }
+  const th = state.data.thresholds;
+  for (const signal of signals) {
+    const scores = signal.scores || {};
+    const pass = {
+      volume: scores.volume >= th.volume_floor, velocity: scores.velocity >= th.velocity,
+      credibility: scores.credibility >= th.credibility, novelty: signal.reason !== "REDUNDANT",
+    };
+    const score = (key) => h("td", { class: pass[key] ? "" : "fail" }, f2(scores[key]));
+    body.append(h("tr", { class: signal.signal_id === state.selected ? "sel" : "", onclick: () => select(signal.signal_id) },
+      h("td", {}, h("div", { style: "font-weight:700" }, signal.label), h("div", { class: "title", title: signal.title }, signal.title)),
+      h("td", {}, h("span", { class: "tag" }, "T" + signal.best_tier)),
+      h("td", {}, signal.source_count + " · " + signal.observation_count + " obs"),
+      score("volume"), score("velocity"), score("credibility"), score("novelty"),
+      h("td", {}, h("span", { class: "tag " + signal.state }, signal.state), " ", h("span", { class: "small" }, signal.reason)),
+      h("td", {}, signal.verdict_count || ""),
+    ));
+  }
+}
+
+function gateRow(gate, signal, th) {
+  const score = signal.scores[gate.key];
+  const detail = signal.detail[gate.key];
+  let mark = null, verdict = "", ok = true;
+  if (gate.key === "volume") { mark = th.volume_floor; ok = score >= mark; verdict = (ok ? "meets" : "under") + " floor " + f2(mark); }
+  if (gate.key === "velocity") { mark = th.velocity; ok = score >= mark; verdict = (ok ? "meets" : "under") + " pass mark " + f2(mark); }
+  if (gate.key === "credibility") {
+    mark = th.credibility;
+    const floorOk = score >= th.provenance_floor;
+    ok = score >= mark;
+    verdict = !floorOk ? "under provenance floor " + f2(th.provenance_floor) : (ok ? "meets" : "under") + " pass mark " + f2(mark);
+  }
+  if (gate.key === "novelty") {
+    mark = 1 - th.similarity_ceiling;
+    ok = signal.reason !== "REDUNDANT" && !(detail.most_similar_signal && detail.max_similarity >= th.similarity_ceiling && detail.new_indicator_count === 0);
+    verdict = ok ? "not redundant" : "redundant";
+  }
+  return h("div", { class: "gate" },
+    h("div", { class: "head" },
+      h("span", { style: "color:" + gate.color }, gate.name),
+      h("span", { style: "color:" + (ok ? "#e2e8f0" : "#f87171") }, f2(score) + " · " + verdict)),
+    h("div", { class: "meter" },
+      h("i", { style: "width:" + Math.round(score * 100) + "%;background:" + gate.color }),
+      h("u", { style: "left:" + (mark * 100) + "%", title: "threshold " + f2(mark) })),
+    h("p", {}, detail.explanation));
+}
+
+function renderInspector() {
+  const host = $("inspector");
+  const signal = selectedSignal();
+  $("inspector-id").textContent = signal ? signal.signal_id : "";
+  if (!signal) {
+    host.replaceChildren(h("div", { class: "empty" }, state.data && state.data.signals.length ? "No signal matches the filter." : "Nothing to inspect yet."));
+    return;
+  }
+  const th = state.data.thresholds;
+  const detail = state.detail && state.detail.signal_id === signal.signal_id ? state.detail : null;
+  const parts = [];
+
+  parts.push(h("div", {},
+    h("div", { class: "row between" },
+      h("span", { class: "mono", style: "font-size:15px;font-weight:700" }, signal.label),
+      h("span", { class: "tag " + signal.state }, signal.state)),
+    h("div", { style: "font-weight:600;margin-top:2px" }, signal.title),
+    signal.description ? h("div", { style: "color:var(--muted);margin-top:4px" }, signal.description) : null,
+    h("div", { class: "small", style: "margin-top:4px" }, "First seen " + when(signal.first_seen) + " · last seen " + when(signal.last_seen))));
+
+  parts.push(h("div", { class: "box why" }, h("h3", {}, isPreview() ? "Why (under the previewed pass marks)" : "Why"), signal.summary));
+
+  if (signal.scores) parts.push(h("div", { class: "box" }, GATES.map((gate) => gateRow(gate, signal, th))));
+
+  if (!detail) {
+    parts.push(h("div", { class: "small", style: "margin-top:10px" }, "Loading evidence…"));
+    host.replaceChildren(...parts);
+    return;
+  }
+
+  // Provenance: every observation behind the signal, with where it came from.
+  const newKeys = new Set(signal.detail ? signal.detail.novelty.new_indicators : []);
+  parts.push(h("div", { class: "box" },
+    h("h3", {}, "Evidence and provenance · " + detail.observations.length + " observation(s)"),
+    detail.observations.map((obs) => {
+      const reference = safeUrl(obs.reference_url), feed = safeUrl(obs.source_uri);
+      const attributes = Object.entries(obs.attributes || {}).filter(([, value]) => typeof value === "string" && value.length < 90);
+      return h("div", { class: "obs" },
+        h("div", { class: "row between" },
+          h("span", { style: "font-weight:600" }, obs.source_name),
+          h("span", { class: "tag" }, "Tier " + obs.source_tier)),
+        h("div", {}, obs.title),
+        h("div", { class: "small" }, "Observed " + when(obs.observed_at) + " · ingested " + when(obs.ingested_at) + (obs.revision > 1 ? " · revision " + obs.revision : "")),
+        attributes.length ? h("div", { class: "small" }, attributes.map(([key, value]) => key.replace(/_/g, " ") + ": " + value).join(" · ")) : null,
+        h("div", { class: "small" }, "Feed: ", feed ? h("a", { href: feed, target: "_blank", rel: "noopener noreferrer" }, feed) : obs.source_uri),
+        reference ? h("div", { class: "small" }, "Reference: ", h("a", { href: reference, target: "_blank", rel: "noopener noreferrer" }, reference)) : null,
+        h("div", { class: "small" }, "Item " + obs.object_key + " · sha256 " + obs.content_hash.slice(0, 16) + "… · audit seq " + obs.last_seq),
+        h("details", {}, h("summary", {}, "Raw item as received"), h("pre", {}, JSON.stringify(obs.raw, null, 2))));
+    })));
+
+  const indicators = new Map();
+  const techniques = new Set(), tactics = new Set();
+  for (const obs of detail.observations) {
+    for (const item of obs.indicators) indicators.set((item.type + ":" + item.value).toLowerCase(), item);
+    obs.techniques.forEach((item) => techniques.add(item));
+    obs.tactics.forEach((item) => tactics.add(item));
+  }
+  if (indicators.size || techniques.size || tactics.size) {
+    parts.push(h("div", { class: "box" },
+      h("h3", {}, "Indicators"),
+      indicators.size
+        ? h("div", { class: "chips" }, [...indicators.entries()].map(([key, item]) =>
+            h("span", { class: "tag" + (newKeys.has(key) ? " green" : ""), title: newKeys.has(key) ? "Not in the closest earlier signal" : "" }, item.type + " " + item.value)))
+        : h("div", { class: "small" }, "None extracted."),
+      techniques.size || tactics.size ? h("h3", { style: "margin-top:10px" }, "ATT&CK") : null,
+      h("div", { class: "chips" }, [...techniques].map((item) => h("span", { class: "tag cyan" }, item)), [...tactics].map((item) => h("span", { class: "tag" }, item)))));
+  }
+
+  // Analyst verdict.
+  const preview = isPreview();
+  const nameField = h("input", { class: "field", id: "analyst", placeholder: "Your name or handle", maxlength: "64", value: analystName(), oninput: (event) => rememberAnalyst(event.target.value.trim()) });
+  const notesField = h("textarea", { class: "field", id: "notes", rows: "2", maxlength: "2000", placeholder: "Notes (optional)", style: "margin-top:6px;resize:vertical" });
+  const verdictButton = (call, label, cls) => h("button", { class: "btn " + cls, disabled: preview, onclick: () => submitVerdict(call, nameField.value, notesField.value) }, label);
+  parts.push(h("div", { class: "box" },
+    h("h3", {}, "Your verdict"),
+    nameField, notesField,
+    h("div", { class: "row", style: "margin-top:8px" },
+      verdictButton("THREAT", "Real threat", "threat"), verdictButton("NOISE", "Noise", "noise"), verdictButton("WRONG_TIER", "Wrong source tier", "tier")),
+    h("div", { class: "small", style: "margin-top:6px" }, preview
+      ? "Verdicts are logged against the saved pass marks. Save or go back to saved first."
+      : "Logged against the current state (" + signal.state + ") with the scores and pass marks in force."),
+    detail.verdicts.length ? h("h3", { style: "margin-top:10px" }, "Verdicts so far") : null,
+    detail.verdicts.map((verdict) => h("div", { class: "small", style: "margin-top:4px" },
+      when(verdict.created_at) + " · " + verdict.analyst_id + " · " + verdict.call + (verdict.outcome ? " (" + verdict.outcome + ")" : "") + (verdict.notes ? ": " + verdict.notes : "")))));
+
+  if (detail.evaluation_history.length > 1) {
+    parts.push(h("div", { class: "box" },
+      h("h3", {}, "Evaluation history"),
+      detail.evaluation_history.map((item) => h("div", { class: "small" },
+        "seq " + item.seq + " · " + when(item.created_at) + " · " + item.trigger + " · " + item.state + " (" + item.reason + ")"))));
+  }
+  host.replaceChildren(...parts);
+}
+
+function renderCalibration(report) {
+  const host = $("calibration");
+  const matrix = report.as_recorded;
+  const pct = (value) => (value === null || value === undefined ? "n/a" : Math.round(value * 100) + "%");
+  const parts = [
+    h("div", { class: "small" }, report.judged_signals + " signal(s) judged (" + report.threat_calls + " threat, " + report.noise_calls + " noise) from " + report.total_verdicts + " verdict(s)."),
+    h("div", { class: "grid2", style: "margin-top:8px" },
+      h("div", { class: "cell" }, h("b", {}, matrix.true_positive), "escalated, real threat"),
+      h("div", { class: "cell" }, h("b", {}, matrix.false_positive), "escalated, noise"),
+      h("div", { class: "cell" }, h("b", {}, matrix.false_negative), "not escalated, real threat"),
+      h("div", { class: "cell" }, h("b", {}, matrix.true_negative), "not escalated, noise")),
+    h("div", { class: "small", style: "margin-top:8px" }, "Precision " + pct(matrix.precision) + " · recall " + pct(matrix.recall) + " · false-positive rate " + pct(matrix.false_positive_rate)),
+  ];
+  const misses = Object.entries(report.misses_by_reason);
+  if (misses.length) parts.push(h("div", { class: "small", style: "margin-top:6px" }, "Misses: " + misses.map(([reason, count]) => count + " × " + reason).join("; ")));
+  const wrong = Object.entries(report.wrong_tier_reports_by_source);
+  if (wrong.length) parts.push(h("div", { class: "small", style: "margin-top:6px" }, "Wrong-tier reports: " + wrong.map(([source, count]) => source + " (" + count + ")").join(", ")));
+  parts.push(h("div", { style: "margin-top:8px;color:var(--muted)" }, report.note));
+  if (report.suggestion) {
+    parts.push(h("button", { class: "btn", style: "margin-top:8px", onclick: () => {
+      state.vel = report.suggestion.velocity; state.cred = report.suggestion.credibility;
+      loadSignals().catch((error) => toast(error.message, true));
+    } }, "Preview velocity " + f2(report.suggestion.velocity) + ", credibility " + f2(report.suggestion.credibility)));
+  }
+  host.replaceChildren(...parts);
+}
+
+function renderAudit(events) {
+  const host = $("audit");
+  if (!events.length) { host.replaceChildren(h("div", { class: "empty" }, "The audit log is empty.")); return; }
+  host.replaceChildren(...events.map((event) => {
+    const body = h("div", {});
+    const row = h("div", { class: "event", title: "Show the stored event" },
+      h("div", {}, h("span", { style: "color:var(--dim)" }, "#" + event.seq + " "), h("span", { style: "color:var(--cyan);font-weight:700" }, event.event_type), h("span", { style: "color:var(--dim)" }, " " + when(event.created_at))),
+      h("div", { style: "color:#cbd5e1" }, event.summary),
+      h("div", { style: "color:var(--dim)" }, "sha256 " + event.line_hash.slice(0, 20) + "… · byte " + event.byte_offset),
+      body);
+    row.addEventListener("click", async (click) => {
+      if (click.target.closest("pre")) return;
+      if (body.firstChild) { body.replaceChildren(); return; }
+      try { body.replaceChildren(h("pre", {}, JSON.stringify(await api("/api/v1/audit/" + event.seq), null, 2))); }
+      catch (error) { toast("Could not read event: " + error.message, true); }
+    });
+    return row;
+  }));
+}
+
+// ---------------------------------------------------------------- actions
+async function submitVerdict(call, analyst, notes) {
+  const signal = selectedSignal();
+  analyst = analyst.trim();
+  if (!signal) return;
+  if (!analyst) { toast("Enter your name or handle first.", true); $("analyst").focus(); return; }
+  rememberAnalyst(analyst);
+  try {
+    const verdict = await api("/api/v1/verdicts", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signal_id: signal.signal_id, analyst_id: analyst, call: call, notes: notes.trim() || null }),
+    });
+    toast("Verdict logged for " + signal.label + " (audit seq " + verdict.seq + ").");
+    state.detail = null;
+    await loadSignals();
+    await loadDetail();
+    await loadSide();
+  } catch (error) { toast("Verdict not saved: " + error.message, true); }
+}
+
+async function saveThresholds() {
+  const analyst = (($("analyst") && $("analyst").value) || analystName()).trim();
+  if (!analyst) { toast("Enter your name in the inspector first, so the change is attributed.", true); return; }
+  rememberAnalyst(analyst);
+  try {
+    const result = await api("/api/v1/thresholds", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ set_by: analyst, velocity: state.vel, credibility: state.cred }),
+    });
+    toast("Pass marks saved. " + result.signals_changed + " signal(s) changed state.");
+    await reloadAll();
+  } catch (error) { toast("Not saved: " + error.message, true); }
+}
+
+let sliderTimer;
+function onSlider() {
+  state.vel = parseFloat($("s-vel").value);
+  state.cred = parseFloat($("s-cred").value);
+  $("v-vel").textContent = f2(state.vel); $("v-cred").textContent = f2(state.cred);
+  $("preview-banner").hidden = !isPreview();
+  clearTimeout(sliderTimer);
+  sliderTimer = setTimeout(() => loadSignals().catch((error) => toast(error.message, true)), 60);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  $("s-vel").addEventListener("input", onSlider);
+  $("s-cred").addEventListener("input", onSlider);
+  $("save-thresholds").addEventListener("click", saveThresholds);
+  $("reset-thresholds").addEventListener("click", () => {
+    state.vel = state.saved.velocity; state.cred = state.saved.credibility;
+    loadSignals().catch((error) => toast(error.message, true));
+  });
+  $("refresh").addEventListener("click", reloadAll);
+  $("search").addEventListener("input", (event) => { state.query = event.target.value; afterFilter(); });
+  for (const button of document.querySelectorAll("#tiers .btn")) {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("#tiers .btn").forEach((other) => other.classList.toggle("on", other === button));
+      state.tier = button.dataset.tier;
+      afterFilter();
+    });
+  }
+  let resizeTimer;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => renderChart(visibleSignals()), 100); });
+  reloadAll();
+});
+
+// Keep the selection inside the visible set so a verdict can't land on a hidden signal.
+function afterFilter() {
+  const visible = visibleSignals();
+  if (!visible.some((signal) => signal.signal_id === state.selected)) {
+    state.selected = visible.length ? visible[0].signal_id : null;
+    state.detail = null;
+    render();
+    loadDetail().catch((error) => toast(error.message, true));
+  } else {
+    render();
+  }
+}
+</script>
+</body>
+</html>

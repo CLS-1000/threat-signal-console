@@ -1,0 +1,24 @@
+# Synthetic example feeds. Everything in them is made up; see make_examples.py.
+#
+#     threat-signal-console --data-dir demo-data ingest --sources examples/sources.toml
+
+[[source]]
+id = "example-vendor"
+name = "Synthetic example: vendor advisories"
+kind = "stix"
+tier = 2
+path = "synthetic_vendor_advisories.stix.json"
+
+[[source]]
+id = "example-osint"
+name = "Synthetic example: open-source reporting"
+kind = "stix"
+tier = 3
+path = "synthetic_osint_reports.stix.json"
+
+[[source]]
+id = "example-chatter"
+name = "Synthetic example: unverified chatter"
+kind = "stix"
+tier = 4
+path = "synthetic_chatter.stix.json"

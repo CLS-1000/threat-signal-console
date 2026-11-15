@@ -1,0 +1,106 @@
+{
+  "type": "bundle",
+  "id": "bundle--edb376dc-96d4-56e2-be20-4f30c7c0efd0",
+  "objects": [
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--adfddb27-11df-514c-80e6-83db8a57a387",
+      "created": "2026-11-11T02:00:00Z",
+      "modified": "2026-11-11T02:00:00Z",
+      "name": "CVE-2099-0005 zero-day PoC dropped (post 1)",
+      "description": "Synthetic example, not a real advisory. An anonymous paste claims a working exploit. Nobody has confirmed it.",
+      "published": "2026-11-11T02:00:00Z",
+      "report_types": [
+        "vulnerability"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0005"
+        }
+      ]
+    },
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--3235906e-99f7-52ec-99ba-fa4be8ed9c6f",
+      "created": "2026-11-11T05:00:00Z",
+      "modified": "2026-11-11T05:00:00Z",
+      "name": "CVE-2099-0005 zero-day PoC dropped (post 2)",
+      "description": "Synthetic example, not a real advisory. An anonymous paste claims a working exploit. Nobody has confirmed it.",
+      "published": "2026-11-11T05:00:00Z",
+      "report_types": [
+        "vulnerability"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0005"
+        }
+      ]
+    },
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--898b1bc9-08d9-5ca2-92bd-bec55ba759e2",
+      "created": "2026-11-11T09:00:00Z",
+      "modified": "2026-11-11T09:00:00Z",
+      "name": "CVE-2099-0005 zero-day PoC dropped (post 3)",
+      "description": "Synthetic example, not a real advisory. An anonymous paste claims a working exploit. Nobody has confirmed it.",
+      "published": "2026-11-11T09:00:00Z",
+      "report_types": [
+        "vulnerability"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0005"
+        }
+      ]
+    },
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--79d2abbe-5266-5673-82bd-31d8acff4c34",
+      "created": "2026-11-11T13:00:00Z",
+      "modified": "2026-11-11T13:00:00Z",
+      "name": "CVE-2099-0005 zero-day PoC dropped (post 4)",
+      "description": "Synthetic example, not a real advisory. An anonymous paste claims a working exploit. Nobody has confirmed it.",
+      "published": "2026-11-11T13:00:00Z",
+      "report_types": [
+        "vulnerability"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0005"
+        }
+      ]
+    },
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--64dca5ba-e995-5ce7-937d-b72689851546",
+      "created": "2026-11-11T17:00:00Z",
+      "modified": "2026-11-11T17:00:00Z",
+      "name": "CVE-2099-0005 zero-day PoC dropped (post 5)",
+      "description": "Synthetic example, not a real advisory. An anonymous paste claims a working exploit. Nobody has confirmed it.",
+      "published": "2026-11-11T17:00:00Z",
+      "report_types": [
+        "vulnerability"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0005"
+        }
+      ]
+    }
+  ]
+}
