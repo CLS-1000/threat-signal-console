@@ -1,0 +1,124 @@
+{
+  "type": "bundle",
+  "id": "bundle--cd643e28-0e6a-518f-adc3-b599db7ee536",
+  "objects": [
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--0f870509-eee5-51aa-a3e8-c7dcd19403a3",
+      "created": "2026-11-10T15:00:00Z",
+      "modified": "2026-11-10T15:00:00Z",
+      "name": "Exploitation of CVE-2099-0001 seen against exposed gateways",
+      "description": "Synthetic example, not a real advisory. Researchers report scanning and exploitation of Example Networks Gateway from 192.0.2.44 and 192.0.2.61.",
+      "published": "2026-11-10T15:00:00Z",
+      "report_types": [
+        "threat-report"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0001"
+        }
+      ]
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--e9491af1-f8fe-5790-a8d9-ee1b868aeee3",
+      "created": "2026-11-10T18:00:00Z",
+      "modified": "2026-11-10T18:00:00Z",
+      "name": "CVE-2099-0001 exploitation source",
+      "description": "Synthetic example, not a real advisory. Address seen delivering the gateway exploit.",
+      "pattern": "[ipv4-addr:value = '192.0.2.44']",
+      "pattern_type": "stix",
+      "valid_from": "2026-11-10T18:00:00Z",
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0001"
+        }
+      ]
+    },
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--1a5d79cd-4505-5db8-aa29-89ef626ff0d5",
+      "created": "2026-11-09T10:00:00Z",
+      "modified": "2026-11-09T10:00:00Z",
+      "name": "CVE-2099-0003: Example Paint crashes on malformed image",
+      "description": "Synthetic example, not a real advisory. A crafted image crashes Example Paint. A blog post claims code execution without proof.",
+      "published": "2026-11-09T10:00:00Z",
+      "report_types": [
+        "vulnerability"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0003"
+        }
+      ]
+    },
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--ed8426ec-3418-5a61-9bd3-7a70487a0ec3",
+      "created": "2026-11-09T12:00:00Z",
+      "modified": "2026-11-09T12:00:00Z",
+      "name": "More claims about CVE-2099-0003 in Example Paint",
+      "description": "Synthetic example, not a real advisory. A second post repeats the code execution claim for the Example Paint image parser.",
+      "published": "2026-11-09T12:00:00Z",
+      "report_types": [
+        "vulnerability"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0003"
+        }
+      ]
+    },
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--ec294d3d-27e7-5f5f-8397-46df38377cb5",
+      "created": "2026-11-09T16:00:00Z",
+      "modified": "2026-11-09T16:00:00Z",
+      "name": "CVE-2099-0003 test file circulates",
+      "description": "Synthetic example, not a real advisory. A sample file that triggers the Example Paint crash is being shared.",
+      "published": "2026-11-09T16:00:00Z",
+      "report_types": [
+        "vulnerability"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0003"
+        }
+      ]
+    },
+    {
+      "type": "report",
+      "spec_version": "2.1",
+      "id": "report--ea47fd7c-437d-5b38-8c23-8c5436e15215",
+      "created": "2026-11-05T11:00:00Z",
+      "modified": "2026-11-05T11:00:00Z",
+      "name": "CVE-2099-0004 note on Example Console networking",
+      "description": "Synthetic example, not a real advisory. One write-up describes a low-impact flaw in Example Console networking.",
+      "published": "2026-11-05T11:00:00Z",
+      "report_types": [
+        "vulnerability"
+      ],
+      "object_refs": [],
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0004"
+        }
+      ]
+    }
+  ]
+}

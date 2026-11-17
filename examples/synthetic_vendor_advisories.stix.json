@@ -1,0 +1,75 @@
+{
+  "type": "bundle",
+  "id": "bundle--5b6c5279-a83b-55c8-9faf-408a9c8dac8e",
+  "objects": [
+    {
+      "type": "vulnerability",
+      "spec_version": "2.1",
+      "id": "vulnerability--da9708f4-5802-5cee-bcea-a1aebc77915a",
+      "created": "2026-11-10T09:00:00Z",
+      "modified": "2026-11-10T09:00:00Z",
+      "name": "CVE-2099-0001",
+      "description": "Synthetic example, not a real advisory. Example Networks Gateway contains an authentication bypass in its management interface that lets a remote attacker run commands.",
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0001"
+        },
+        {
+          "source_name": "mitre-attack",
+          "external_id": "T1190",
+          "url": "https://attack.mitre.org/techniques/T1190/"
+        }
+      ]
+    },
+    {
+      "type": "vulnerability",
+      "spec_version": "2.1",
+      "id": "vulnerability--16a8b086-4436-5821-b255-9d460cdd90d2",
+      "created": "2026-11-08T14:00:00Z",
+      "modified": "2026-11-08T14:00:00Z",
+      "name": "CVE-2099-0002",
+      "description": "Synthetic example, not a real advisory. Example Mail Server contains a heap overflow in its message parser. No exploitation has been reported.",
+      "external_references": [
+        {
+          "source_name": "cve",
+          "external_id": "CVE-2099-0002"
+        }
+      ]
+    },
+    {
+      "type": "malware",
+      "spec_version": "2.1",
+      "id": "malware--09c2fbba-3d56-58ea-a542-545081aa0845",
+      "created": "2026-11-06T08:00:00Z",
+      "modified": "2026-11-06T08:00:00Z",
+      "name": "ExampleLoader phishing campaign",
+      "description": "Synthetic example, not a real advisory. ExampleLoader is delivered through invoices attached to phishing mail. The attachment drops a loader that contacts 198.51.100.23 and installs a remote access tool.",
+      "is_family": false,
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "T1566.001",
+          "url": "https://attack.mitre.org/techniques/T1566.001/"
+        }
+      ]
+    },
+    {
+      "type": "malware",
+      "spec_version": "2.1",
+      "id": "malware--58b4ae57-a2dc-520c-a7fd-9020b8d50e52",
+      "created": "2026-11-07T08:00:00Z",
+      "modified": "2026-11-07T08:00:00Z",
+      "name": "ExampleLoader phishing campaign (reissued)",
+      "description": "Synthetic example, not a real advisory. ExampleLoader is delivered through invoices attached to phishing mail. The attachment drops a loader that contacts 198.51.100.23 and installs a remote access tool.",
+      "is_family": false,
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "T1566.001",
+          "url": "https://attack.mitre.org/techniques/T1566.001/"
+        }
+      ]
+    }
+  ]
+}

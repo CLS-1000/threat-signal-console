@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Local data: the audit log and its index stay out of git.
+data/
+demo-data/

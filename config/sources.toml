@@ -1,0 +1,31 @@
+# Sources the console ingests. Run them with:
+#
+#     threat-signal-console ingest
+#
+# kind  "kev"  = CISA Known Exploited Vulnerabilities catalog (JSON)
+#       "stix" = a STIX 2.1 bundle (JSON), from a url or a local path
+#
+# tier  1 = authoritative catalog        2 = vendor or CERT advisory
+#       3 = open-source reporting        4 = unverified chatter
+#
+# The tier is your judgement of the source and drives Gates 01 and 03.
+# Paths are relative to this file.
+
+[[source]]
+id = "cisa-kev"
+name = "CISA Known Exploited Vulnerabilities"
+kind = "kev"
+tier = 1
+url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+max_age_days = 30   # only entries added in the last 30 days; remove to load the whole catalog
+enabled = true
+
+# Add your own STIX 2.1 feeds here, for example:
+#
+# [[source]]
+# id = "vendor-advisories"
+# name = "Vendor advisories"
+# kind = "stix"
+# tier = 2
+# url = "https://example.org/advisories.stix.json"
+# enabled = true
